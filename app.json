@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "PointPharma",
+    "slug": "pointpharma",
+    "scheme": "pointpharma",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "plugins": [
+      "expo-router",
+      "expo-asset"
+    ],
+    "splash": {
+      "backgroundColor": "#0099B8"
+    },
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0099B8"
+      }
+    }
+  }
+}
