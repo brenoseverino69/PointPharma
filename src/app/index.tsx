@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View,
 } from 'react-native';
@@ -11,23 +11,30 @@ import { useAuth } from '@/context/AuthContext';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login } = useAuth();
-  const [name, setName] = useState('');
+  const { login, user, loading: authLoading } = useAuth();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<{ name?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [submitting, setSubmitting] = useState(false);
 
-  const submit = () => {
-    // const e: { name?: string; password?: string } = {};
-    // if (!name.trim()) e.name = 'Informe seu nome';
-    // if (!password) e.password = 'Informe sua senha';
-    // setErrors(e);
-    // if (Object.keys(e).length) return;
+  useEffect(() => {
+    if (!authLoading && user) router.replace('/home');
+  }, [authLoading, router, user]);
 
-    // const res = login(name.trim(), password);
-    // if (!res.ok) {
-    //   Alert.alert('Erro', `${res.error}\nCadastre-se para continuar.`);
-    //   return;
-    // }
+  const submit = async () => {
+    const nextErrors: { email?: string; password?: string } = {};
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) nextErrors.email = 'Informe um e-mail válido';
+    if (!password) nextErrors.password = 'Informe sua senha';
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
+    setSubmitting(true);
+    const result = await login(email.trim(), password);
+    setSubmitting(false);
+    if (!result.ok) {
+      Alert.alert('Não foi possível entrar', result.error);
+      return;
+    }
     router.replace('/home');
   };
 
@@ -40,7 +47,7 @@ export default function LoginScreen() {
             <Text style={styles.sub}>Entre para continuar</Text>
           </View>
 
-          <Input label="NOME" value={name} onChangeText={setName} placeholder="Seu nome" error={errors.name} autoCapitalize="words" />
+          <Input label="EMAIL" value={email} onChangeText={setEmail} placeholder="voce@email.com" keyboardType="email-address" autoCapitalize="none" error={errors.email} />
           <Input label="SENHA" value={password} onChangeText={setPassword} placeholder="Sua senha" secure error={errors.password} />
 
           <TouchableOpacity onPress={() => Alert.alert('Recuperar senha', 'Funcionalidade em breve.')}>
@@ -49,9 +56,12 @@ export default function LoginScreen() {
 
           <View style={{ flex: 1, minHeight: 80 }} />
 
-          <Button title="Log in" onPress={submit} />
+          <Button title={submitting ? 'Entrando...' : 'Entrar'} onPress={submit} disabled={submitting || authLoading} />
           <TouchableOpacity style={{ marginTop: 18 }} onPress={() => router.push('/register')}>
             <Text style={[styles.link, { textAlign: 'center' }]}>Cadastre-se</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={{ marginTop: 18 }} onPress={() => router.replace('/home')}>
+            <Text style={[styles.link, { textAlign: 'center' }]}>Continuar como visitante</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>

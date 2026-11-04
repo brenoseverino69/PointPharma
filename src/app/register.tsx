@@ -34,18 +34,27 @@ export default function RegisterScreen() {
   const { register } = useAuth();
   const [form, setForm] = useState<Form>({ name: '', email: '', password: '', birth: '' });
   const [errors, setErrors] = useState<Partial<Form>>({});
+  const [submitting, setSubmitting] = useState(false);
   const set = (k: keyof Form) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
 
-  const submit = () => {
+  const submit = async () => {
     const e: Partial<Form> = {};
     if (form.name.trim().length < 3) e.name = 'Informe seu nome completo';
     if (!/^\S+@\S+\.\S+$/.test(form.email)) e.email = 'E-mail inválido';
-    if (!/^(?=.*[A-Za-z])(?=.*\d).{6,}$/.test(form.password)) e.password = 'Mínimo 6 caracteres, com letras e números';
+    if (!/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(form.password)) e.password = 'Mínimo 8 caracteres, com letras e números';
     if (!validDate(form.birth)) e.birth = 'Data inválida (DD/MM/AAAA)';
     setErrors(e);
     if (Object.keys(e).length) return;
 
-    const res = register({ ...form, name: form.name.trim() });
+    const [dia, mes, ano] = form.birth.split('/');
+    setSubmitting(true);
+    const res = await register({
+      name: form.name.trim(),
+      email: form.email.trim(),
+      password: form.password,
+      birth: `${ano}-${mes}-${dia}`,
+    });
+    setSubmitting(false);
     if (!res.ok) {
       Alert.alert('Erro', res.error);
       return;
@@ -66,12 +75,12 @@ export default function RegisterScreen() {
           </View>
 
           <Input bg={colors.gray} label="NOME" value={form.name} onChangeText={set('name')} placeholder="Seu nome" error={errors.name} autoCapitalize="words" />
-          <Input bg={colors.gray} label="EMAIL" value={form.email} onChangeText={set('email')} placeholder="voce@email.com" keyboardType="email-address" error={errors.email} />
+          <Input bg={colors.gray} label="EMAIL" value={form.email} onChangeText={set('email')} placeholder="voce@email.com" keyboardType="email-address" autoCapitalize="none" error={errors.email} />
           <Input bg={colors.gray} label="SENHA" value={form.password} onChangeText={set('password')} placeholder="Crie uma senha" secure error={errors.password} />
           <Input bg={colors.gray} label="DATA DE NASCIMENTO" value={form.birth} onChangeText={(t) => set('birth')(maskDate(t))} placeholder="__/__/____" keyboardType="number-pad" error={errors.birth} />
 
           <View style={{ height: 30 }} />
-          <Button title="Cadastrar" onPress={submit} />
+          <Button title={submitting ? 'Criando conta...' : 'Cadastrar'} onPress={submit} disabled={submitting} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

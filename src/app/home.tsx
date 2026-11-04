@@ -1,37 +1,46 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+    ActivityIndicator,
+    FlatList,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { colors, fonts } from '@/theme';
 import Header from '@/components/Header';
 import SearchBar from '@/components/SearchBar';
 import ProductCard from '@/components/ProductCard';
-import { products } from '@/data/mock';
 import { useCart } from '@/context/CartContext';
-import { useAuth } from '@/context/AuthContext';
 import { Farmacia, listarFarmacias } from '@/services/farmacias';
+import { listarProdutos } from '@/services/produtos';
+import { Product } from '@/data/types';
 
 export default function HomeScreen() {
     const router = useRouter();
     const { count, add } = useCart();
-    const { user, logout } = useAuth();
 
     const [query, setQuery] = useState('');
     const [farmacias, setFarmacias] = useState<Farmacia[]>([]);
+    const [produtos, setProdutos] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingProdutos, setLoadingProdutos] = useState(true);
     const [erro, setErro] = useState(false);
+    const [erroProdutos, setErroProdutos] = useState(false);
 
     useEffect(() => {
         buscarFarmacias();
+        buscarProdutos();
     }, []);
 
     async function buscarFarmacias() {
         try {
             setLoading(true);
             setErro(false);
-
             const dados = await listarFarmacias();
-
             setFarmacias(dados);
         } catch (error) {
             console.log('Erro ao buscar farmácias:', error);
@@ -41,39 +50,60 @@ export default function HomeScreen() {
         }
     }
 
+    async function buscarProdutos() {
+        try {
+            setLoadingProdutos(true);
+            setErroProdutos(false);
+            const dados = await listarProdutos();
+            setProdutos(dados);
+        } catch (error) {
+            console.log('Erro ao buscar produtos:', error);
+            setErroProdutos(true);
+        } finally {
+            setLoadingProdutos(false);
+        }
+    }
+
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
 
         if (!q) return farmacias;
 
         return farmacias.filter((p) =>
-            p.nome.toLowerCase().includes(q)
+            p.nome.toLowerCase().includes(q) || p.endereco.toLowerCase().includes(q)
         );
     }, [query, farmacias]);
 
-    const offers = products.filter((p) => p.oldPrice);
+    const offers = useMemo(
+        () => produtos.filter((p) => p.oldPrice != null && p.oldPrice > p.price),
+        [produtos]
+    );
 
-    const profile = () =>
-        Alert.alert(user?.name ?? 'Perfil', user?.email ?? '', [
-            { text: 'Cancelar', style: 'cancel' },
-            {
-                text: 'Sair',
-                style: 'destructive',
-                onPress: () => {
-                    logout();
-                    router.replace('/');
-                },
-            },
-        ]);
+    const produtosExibidos = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        if (!q) return offers;
+
+        return produtos.filter((produto) => {
+            const farmacia = produto.pharmacyName
+                ?? farmacias.find((item) => String(item.id) === produto.pharmacyId)?.nome
+                ?? '';
+            return produto.name.toLowerCase().includes(q)
+                || produto.category.toLowerCase().includes(q)
+                || farmacia.toLowerCase().includes(q);
+        });
+    }, [query, produtos, offers, farmacias]);
 
     return (
         <View style={styles.screen}>
             <Header
                 right={
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                        <TouchableOpacity onPress={() => router.push('/history')}>
+                            <Ionicons name="time-outline" size={28} color="#fff" />
+                        </TouchableOpacity>
+
                         <TouchableOpacity onPress={() => router.push('/cart')}>
                             <Ionicons name="cart-outline" size={34} color="#fff" />
-
                             {count > 0 && (
                                 <View style={styles.badge}>
                                     <Text style={styles.badgeText}>{count}</Text>
@@ -81,7 +111,7 @@ export default function HomeScreen() {
                             )}
                         </TouchableOpacity>
 
-                        <TouchableOpacity onPress={profile} style={styles.avatar}>
+                        <TouchableOpacity onPress={() => router.push('/profile')} style={styles.avatar}>
                             <Ionicons name="person" size={24} color="#fff" />
                         </TouchableOpacity>
                     </View>
@@ -92,14 +122,12 @@ export default function HomeScreen() {
                 <SearchBar
                     value={query}
                     onChangeText={setQuery}
-                    placeholder="Procure por farmácias"
+                    placeholder="Busque produtos ou farmácias"
                 />
 
                 <View style={{ marginTop: 18 }}>
                     {loading && (
-                        <Text style={styles.empty}>
-                            Carregando farmácias...
-                        </Text>
+                        <Text style={styles.empty}>Carregando farmácias...</Text>
                     )}
 
                     {erro && (
@@ -107,11 +135,7 @@ export default function HomeScreen() {
                             <Text style={styles.empty}>
                                 Não foi possível carregar as farmácias.
                             </Text>
-
-                            <TouchableOpacity
-                                style={styles.retryButton}
-                                onPress={buscarFarmacias}
-                            >
+                            <TouchableOpacity style={styles.retryButton} onPress={buscarFarmacias}>
                                 <Text style={styles.retryText}>Tentar novamente</Text>
                             </TouchableOpacity>
                         </View>
@@ -124,34 +148,42 @@ export default function HomeScreen() {
                             style={styles.pharmacy}
                             onPress={() => router.push(`/pharmacy/${p.id}`)}
                         >
-                            <Text style={styles.pharmacyName}>
-                                {p.nome}
-                            </Text>
-
-                            <Text style={styles.pharmacyInfo}>
-                                {p.horarioFuncionamento}
-                            </Text>
+                            <Text style={styles.pharmacyName}>{p.nome}</Text>
+                            <Text style={styles.pharmacyInfo}>{p.horarioFuncionamento}</Text>
                         </TouchableOpacity>
                     ))}
 
                     {!loading && !erro && filtered.length === 0 && (
-                        <Text style={styles.empty}>
-                            Nenhuma farmácia encontrada.
-                        </Text>
+                        <Text style={styles.empty}>Nenhuma farmácia encontrada.</Text>
                     )}
                 </View>
 
-                <Text style={styles.section}>Melhores ofertas</Text>
+                <Text style={styles.section}>{query.trim() ? 'Produtos encontrados' : 'Melhores ofertas'}</Text>
 
-                <FlatList
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    data={offers}
-                    keyExtractor={(i) => String(i.id)}
-                    renderItem={({ item }) => (
-                        <ProductCard product={item} onAdd={add} />
-                    )}
-                />
+                {loadingProdutos ? (
+                    <ActivityIndicator color={colors.green} style={{ marginVertical: 18 }} />
+                ) : erroProdutos ? (
+                    <View style={styles.messageContainer}>
+                        <Text style={styles.empty}>Não foi possível carregar as ofertas.</Text>
+                        <TouchableOpacity style={styles.retryButton} onPress={buscarProdutos}>
+                            <Text style={styles.retryText}>Tentar novamente</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : produtosExibidos.length > 0 ? (
+                    <FlatList
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        data={produtosExibidos}
+                        keyExtractor={(item) => item.id}
+                        renderItem={({ item }) => (
+                            <ProductCard product={item} onAdd={add} />
+                        )}
+                    />
+                ) : (
+                    <Text style={styles.empty}>
+                        {query.trim() ? 'Nenhum produto corresponde à busca.' : 'Nenhuma oferta cadastrada no momento.'}
+                    </Text>
+                )}
             </ScrollView>
         </View>
     );
