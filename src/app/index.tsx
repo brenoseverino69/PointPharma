@@ -17,17 +17,17 @@ export default function LoginScreen() {
   const [errors, setErrors] = useState<{ name?: string; password?: string }>({});
 
   const submit = () => {
-    const e: { name?: string; password?: string } = {};
-    if (!name.trim()) e.name = 'Informe seu nome';
-    if (!password) e.password = 'Informe sua senha';
-    setErrors(e);
-    if (Object.keys(e).length) return;
+    // const e: { name?: string; password?: string } = {};
+    // if (!name.trim()) e.name = 'Informe seu nome';
+    // if (!password) e.password = 'Informe sua senha';
+    // setErrors(e);
+    // if (Object.keys(e).length) return;
 
-    const res = login(name.trim(), password);
-    if (!res.ok) {
-      Alert.alert('Erro', `${res.error}\nCadastre-se para continuar.`);
-      return;
-    }
+    // const res = login(name.trim(), password);
+    // if (!res.ok) {
+    //   Alert.alert('Erro', `${res.error}\nCadastre-se para continuar.`);
+    //   return;
+    // }
     router.replace('/home');
   };
 
