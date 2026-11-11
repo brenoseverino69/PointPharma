@@ -60,21 +60,28 @@ export default function ProductCard({ product, onAdd, width = 160 }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#B8B8B8',
-    borderRadius: 14,
-    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 11,
     marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#E7EFF0',
+    shadowColor: '#18373E',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 9,
+    elevation: 2,
   },
   name: {
     fontFamily: fonts.bold,
     fontSize: 13,
-    color: '#000',
+    color: colors.text,
     minHeight: 34,
     marginBottom: 6,
   },
   imgBox: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
+    backgroundColor: '#F2F8F9',
+    borderRadius: 12,
     height: 92,
     alignItems: 'center',
     justifyContent: 'center',
@@ -96,12 +103,12 @@ const styles = StyleSheet.create({
   category: {
     fontFamily: fonts.medium,
     fontSize: 10,
-    color: '#333',
+    color: colors.muted,
   },
   old: {
     fontFamily: fonts.regular,
     fontSize: 9,
-    color: '#333',
+    color: colors.muted,
     textDecorationLine: 'line-through',
     minHeight: 14,
   },
@@ -113,7 +120,7 @@ const styles = StyleSheet.create({
   price: {
     fontFamily: fonts.bold,
     fontSize: 11,
-    color: '#000',
+    color: colors.text,
     flex: 1,
   },
   add: {

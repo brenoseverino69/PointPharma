@@ -1,7 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { limparSessao, lerSessao, salvarSessao, TokenResponse } from './session';
 
-export const API_BASE_URL = 'http://10.139.75.47:5000/api';
+export const API_BASE_URL = 'http://10.139.75.56:5231/api';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
