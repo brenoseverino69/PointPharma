@@ -1,4 +1,5 @@
 import React, { createContext, ReactNode, useContext, useMemo, useReducer } from 'react';
+import { Alert } from 'react-native';
 import { CartItem, Product } from '@/data/types';
 
 type Action =
@@ -23,6 +24,13 @@ function reducer(state: CartItem[], action: Action): CartItem[] {
   switch (action.type) {
     case 'add': {
       const exists = state.find((i) => i.product.id === action.product.id);
+      const estoque = action.product.stock;
+
+      if (estoque !== undefined && estoque <= (exists?.qty ?? 0)) {
+        Alert.alert('Estoque máximo', `Há somente ${estoque} unidade(s) disponíveis de ${action.product.name}.`);
+        return state;
+      }
+
       if (exists) {
         return state.map((i) =>
           i.product.id === action.product.id ? { ...i, qty: i.qty + 1 } : i

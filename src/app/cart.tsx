@@ -1,5 +1,4 @@
-
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -8,35 +7,20 @@ import Header, { Logo } from '@/components/Header';
 import SearchBar from '@/components/SearchBar';
 import Button from '@/components/Button';
 import { useCart } from '@/context/CartContext';
-import { pharmacyById } from '@/data/mock';
 import { CartItem } from '@/data/types';
-import api from '../services/api';
 
 export default function CartScreen() {
     const router = useRouter();
     const { items, add, dec, remove, total } = useCart();
     const [query, setQuery] = useState('');
 
-    useEffect(() => {
-        buscarProdutos();
-    }, []);
-
-    async function buscarProdutos() {
-        try {
-            const resposta = await api.get('/ProdutosApi');
-
-            console.log(resposta.data);
-
-        } catch (error) {
-            console.log('Erro ao buscar produtos:', error);
-        }
-    }
-
     const list = useMemo(() => {
         const q = query.trim().toLowerCase();
 
         return items.filter((i) =>
             !q || i.product.name.toLowerCase().includes(q)
+                || i.product.category.toLowerCase().includes(q)
+                || (i.product.pharmacyName ?? '').toLowerCase().includes(q)
         );
     }, [items, query]);
 
@@ -79,7 +63,7 @@ export default function CartScreen() {
                                 <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                                     <Ionicons name="location-sharp" size={12} color="#fff" />
                                     <Text style={styles.store} numberOfLines={1}>
-                                        {pharmacyById(item.product.pharmacyId)?.name}
+                                        {item.product.pharmacyName ?? `Farmácia #${item.product.pharmacyId}`}
                                     </Text>
                                 </View>
 
@@ -89,13 +73,26 @@ export default function CartScreen() {
                             </View>
 
                             <View style={styles.qtyRow}>
+                                {item.product.stock !== undefined && (
+                                    <Text style={styles.stock}>
+                                        Estoque: {item.product.stock} {item.product.stock === 1 ? 'unidade' : 'unidades'}
+                                    </Text>
+                                )}
+
                                 <TouchableOpacity style={styles.qtyBtn} onPress={() => dec(item.product.id)}>
                                     <Ionicons name="remove" size={16} color="#fff" />
                                 </TouchableOpacity>
 
                                 <Text style={styles.qty}>{item.qty}</Text>
 
-                                <TouchableOpacity style={styles.qtyBtn} onPress={() => add(item.product)}>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.qtyBtn,
+                                        item.product.stock !== undefined && item.qty >= item.product.stock && styles.qtyBtnDisabled,
+                                    ]}
+                                    onPress={() => add(item.product)}
+                                    disabled={item.product.stock !== undefined && item.qty >= item.product.stock}
+                                >
                                     <Ionicons name="add" size={16} color="#fff" />
                                 </TouchableOpacity>
                             </View>
@@ -139,9 +136,11 @@ const styles = StyleSheet.create({
     row: { flexDirection: 'row', alignItems: 'center', marginTop: 12 },
     store: { fontFamily: fonts.semi, color: '#fff', fontSize: 11, marginLeft: 3, flex: 1 },
     price: { fontFamily: fonts.bold, color: '#fff', fontSize: 11 },
-    qtyRow: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-end', marginTop: 10, gap: 10 },
+    qtyRow: { flexDirection: 'row', alignItems: 'center', marginTop: 10, gap: 10 },
     qtyBtn: { backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: 10, padding: 4 },
+    qtyBtnDisabled: { opacity: 0.45 },
     qty: { color: '#fff', fontFamily: fonts.bold, fontSize: 14, minWidth: 18, textAlign: 'center' },
+    stock: { color: '#fff', fontFamily: fonts.medium, fontSize: 10, flex: 1 },
     divider: { height: 1, backgroundColor: '#ddd', marginTop: 14 },
     emptyBox: { alignItems: 'center', marginTop: 60 },
     empty: { fontFamily: fonts.medium, color: colors.muted, marginTop: 10 },

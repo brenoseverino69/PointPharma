@@ -12,11 +12,13 @@ export interface Pharmacy {
 export interface Product {
   id: string;
   pharmacyId: string;
+  pharmacyName?: string;
   name: string;
+  description?: string;
   category: string;
   price: number;
-  /** Preço "De". Se existir, o produto aparece em "Melhores ofertas". */
   oldPrice?: number;
+  stock?: number;
   icon: IconName;
 }
 
@@ -26,8 +28,8 @@ export interface CartItem {
 }
 
 export interface User {
+  id: string;
   name: string;
   email: string;
-  password: string;
   birth: string;
 }
