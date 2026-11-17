@@ -79,7 +79,7 @@ export default function LoginScreen() {
               <Input label="SENHA" value={password} onChangeText={setPassword} placeholder="Sua senha" secure error={errors.password} bg="#F4F8F9" />
             </View>
 
-            <TouchableOpacity onPress={() => Alert.alert('Recuperar senha', 'Funcionalidade em breve.')} style={styles.forgot}>
+            <TouchableOpacity onPress={() => router.push('/forgot-password')} style={styles.forgot}>
               <Text style={styles.link}>Esqueceu a senha?</Text>
             </TouchableOpacity>
 

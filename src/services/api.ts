@@ -14,7 +14,9 @@ function isIdentityEndpoint(url = ''): boolean {
     return url.includes('/identity/login')
         || url.includes('/identity/register')
         || url.includes('/identity/refresh')
-        || url.includes('/auth/register');
+        || url.includes('/auth/register')
+        || url.includes('/auth/forgot-password')
+        || url.includes('/auth/reset-password');
 }
 
 let refreshInFlight: Promise<string | null> | null = null;

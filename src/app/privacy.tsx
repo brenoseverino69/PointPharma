@@ -60,10 +60,14 @@ export default function PrivacyScreen() {
           Você pode atualizar nome e data de nascimento na tela de perfil, consultar seus pedidos e sair da conta. A LGPD também prevê direitos sobre seus dados, como confirmação de tratamento, acesso e correção.
         </PolicySection>
 
+        <PolicySection icon="mail-outline" title="Contato sobre dados pessoais">
+          Responsável informado pelo projeto: Breno Rafael Rodrigues, Point Pharma. Para solicitações ou dúvidas sobre dados pessoais, escreva para tectenico@gmail.com. O prazo informado para resposta é de até 2 dias úteis.
+        </PolicySection>
+
         <View style={styles.notice}>
           <Ionicons name="information-circle-outline" size={20} color="#9A6712" />
           <Text style={styles.noticeText}>
-            O PointPharma está em desenvolvimento. Antes de uma publicação externa, esta página precisa incluir a identificação do responsável pelo tratamento e um canal para solicitações sobre dados pessoais.
+            O prazo de retenção das contas e dos pedidos ainda não foi formalmente definido. Essa regra precisa ser aprovada e documentada antes da publicação do sistema. A exclusão de conta também não está disponível pela interface.
           </Text>
         </View>
 
